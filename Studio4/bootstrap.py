@@ -1,3 +1,4 @@
+import numpy as np
 
 """
 Strong linear model in regression
@@ -50,7 +51,9 @@ def bootstrap_ci(bootstrap_stats, alpha=0.05):
     
     ....
     """
-    pass
+    lower = np.percentile(bootstrap_stats, 100 * (alpha / 2))
+    upper = np.percentile(bootstrap_stats, 100 * (1 - alpha / 2))
+    return (lower, upper)
 
 def R_squared(X, y):
     """
@@ -72,4 +75,25 @@ def R_squared(X, y):
     ValueError
         If X.shape[0] != len(y)
     """
-    pass
+    X = np.asarray(X)
+    y = np.asarray(y)
+
+    if X.shape[0] != len(y):
+        raise ValueError("Number of rows in X must equal length of y")
+
+    # OLS estimate of coefficients: beta = (X^T X)^{-1} X^T y
+    beta_hat = np.linalg.inv(X.T @ X) @ X.T @ y
+
+    # Predictions
+    y_hat = X @ beta_hat
+
+    # Total sum of squares
+    y_mean = np.mean(y)
+    SST = np.sum((y - y_mean) ** 2)
+
+    # Residual sum of squares
+    SSR = np.sum((y - y_hat) ** 2)
+
+    # R-squared
+    R2 = 1 - SSR / SST
+    return R2
