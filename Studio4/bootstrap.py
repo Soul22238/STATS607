@@ -49,8 +49,18 @@ def bootstrap_ci(bootstrap_stats, alpha=0.05):
     tuple 
         (lower_bound, upper_bound) of the CI
     
-    ....
+    Raises
+    ------
+    ValueError
+        If alpha is not in (0, 1)
+        If bootstrap_stats is empty
+    
     """
+    if not (0 < alpha < 1):
+        raise ValueError("alpha must be in (0, 1)")
+    if len(bootstrap_stats) == 0:
+        raise ValueError("bootstrap_stats must not be empty")
+    
     lower = np.percentile(bootstrap_stats, 100 * (alpha / 2))
     upper = np.percentile(bootstrap_stats, 100 * (1 - alpha / 2))
     return (lower, upper)
