@@ -31,7 +31,12 @@ def bootstrap_sample(X, y, compute_stat, n_bootstrap=1000):
 
     ....
     """
-    pass
+    # Create container for the boostraping statistics
+    boost_stat = np.zeros(n_bootstrap)
+    
+    # Loop to calculate statistic
+    for _ in range(n_bootstrap):
+        
 
 def bootstrap_ci(bootstrap_stats, alpha=0.05):
     """
