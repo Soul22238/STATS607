@@ -34,9 +34,14 @@ def bootstrap_sample(X, y, compute_stat, n_bootstrap=1000):
     # Create container for the boostraping statistics
     boost_stat = np.zeros(n_bootstrap)
     
+    n = len(y)
+    
     # Loop to calculate statistic
-    for _ in range(n_bootstrap):
-        
+    for i in range(n_bootstrap):
+        idx = np.random.choice(n)
+        boost_stat[i] = compute_stat(X[idx, ], y[idx])
+    
+    return boost_stat
 
 def bootstrap_ci(bootstrap_stats, alpha=0.05):
     """
