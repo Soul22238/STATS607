@@ -29,8 +29,55 @@ def bootstrap_sample(X, y, compute_stat, n_bootstrap=1000):
     numpy.ndarray
         Array of bootstrap statistics, length n_bootstrap
 
-    ....
+    Raises
+    ------
+    TypeError
+        If `X` or `y` cannot be converted to NumPy arrays,
+        or if `n_bootstrap` is not an integer.
+    ValueError
+        - If `X` is not 2D.
+        - If `y` is not 1D.
+        - If `X` and `y` have different lengths.
+        - If `X.shape[0] <= 0`.
+        - If `X` or `y` contains NaN values.
+    UserWarning
+        - If `X.shape[0] <= 3`, warns about small sample size.
+        - If `n_bootstrap < 1000`, warns about too few bootstrap samples.
     """
+    # Input validation
+    try:
+        X = np.asarray(X)
+    except Exception as e:
+        raise TypeError(f"X must be array-like; got {type(X).__name__}") from e
+    try:
+        y = np.asarray(y)
+    except Exception as e:
+        raise TypeError(f"y must be array-like; got {type(y).__name__}") from e
+    
+    if X.ndim != 2:
+        raise ValueError("X must be 2D")
+
+    if y.ndim != 1:
+        raise ValueError("y must be 2D")
+    
+    if len(X) != len(y):
+        raise ValueError(f"X and y must have same length: got {len(X)} and {len(y)}")
+    
+    if X.shape[0] <= 0:
+        raise ValueError(f"X and y have invalid sample size of {X.shape[0]}")
+    elif X.shape[0] <= 3:
+        warnings.warn(f"X and y have a small sample size of {X.shape[0]}.", UserWarning)
+    
+    if np.any(np.isnan(X)) or np.any(np.isnan(y)):
+        raise ValueError("Exists missing values (NaN)")
+    
+    if not isinstance(n_bootstrap, int):
+        raise TypeError(f"Number of boostraping samples must be integer")
+    
+    if n_bootstrap < 1000:
+        warnings.warn(f"Using {n_bootstrap} bootstarp samples." 
+                      "Consider using at least 1000.", UserWarning)
+    
     # Create container for the boostraping statistics
     boost_stat = np.zeros(n_bootstrap)
     
@@ -38,7 +85,7 @@ def bootstrap_sample(X, y, compute_stat, n_bootstrap=1000):
     
     # Loop to calculate statistic
     for i in range(n_bootstrap):
-        idx = np.random.choice(n)
+        idx = np.random.choice(n, size=n, replace=True)
         boost_stat[i] = compute_stat(X[idx, ], y[idx])
     
     return boost_stat
@@ -62,8 +109,8 @@ def bootstrap_ci(bootstrap_stats, alpha=0.05):
     Raises
     ------
     ValueError
-        If alpha is not in (0, 1)
-        If bootstrap_stats is empty
+        - If `alpha` is not in (0, 1).
+        - If `bootstrap_stats` is empty.
     
     """
     if not (0 < alpha < 1):
@@ -97,11 +144,11 @@ def R_squared(X, y):
     Raises
     ------
     ValueError
-        If X.shape[0] != len(y)
-        If first column of X is not all ones (intercept)
-        If y has zero variance
+        - If `X.shape[0] != len(y)`.
+        - If first column of `X` is not all ones (intercept).
+        - If `y` has zero variance.
     LinAlgError
-        If X^T X is singular (features may be collinear)
+        If `X^T X` is singular (features may be collinear).
     """
     X = np.asarray(X)
     y = np.asarray(y)
