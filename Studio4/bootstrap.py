@@ -95,14 +95,15 @@ def R_squared(X, y):
     """
     X = np.asarray(X)
     y = np.asarray(y)
+    if X.shape[0] != len(y):
+        raise ValueError("Number of rows in X must equal length of y")
     if not np.allclose(X[:,0], 1):
         raise ValueError("First column of X should be all ones to include intercept")
     if np.linalg.matrix_rank(X.T @ X) < X.shape[1]:
         raise np.linalg.LinAlgError("Matrix X^T X is singular; features may be collinear")
     if np.allclose(y, y.mean()):
         raise ValueError("y has zero variance; R-squared is undefined")
-    if X.shape[0] != len(y):
-        raise ValueError("Number of rows in X must equal length of y")
+
 
     # OLS estimate of coefficients: beta = (X^T X)^{-1} X^T y
     beta_hat = np.linalg.inv(X.T @ X) @ X.T @ y
