@@ -40,9 +40,23 @@ def bootstrap_sample(X, y, compute_stat, n_bootstrap=1000):
         - If `X` and `y` have different lengths.
         - If `X.shape[0] <= 0`.
         - If `X` or `y` contains NaN values.
+    
+    Warns
+    -----
     UserWarning
         - If `X.shape[0] <= 3`, warns about small sample size.
         - If `n_bootstrap < 1000`, warns about too few bootstrap samples.
+    
+    Examples
+    --------
+    >>> import numpy as np
+    >>> np.random.seed(0)  # for reproducibility
+    >>> from mymodule import bootstrap_sample
+    >>> X = np.column_stack([np.ones(5), [1, 2, 3, 4, 5]])
+    >>> y = np.array([1, 2, 3, 4, 5])
+    >>> stats = bootstrap_sample(X, y, compute_stat=lambda X, y: np.mean(y), n_bootstrap=1000)
+    >>> round(stats.mean(), 2)
+    3.0
     """
     # Input validation
     try:
@@ -63,8 +77,8 @@ def bootstrap_sample(X, y, compute_stat, n_bootstrap=1000):
     if len(X) != len(y):
         raise ValueError(f"X and y must have same length: got {len(X)} and {len(y)}")
     
-    if X.shape[0] <= 0:
-        raise ValueError(f"X and y have invalid sample size of {X.shape[0]}")
+    if X.size == 0:
+        raise ValueError("X and y must not be empty")
     elif X.shape[0] <= 3:
         warnings.warn(f"X and y have a small sample size of {X.shape[0]}.", UserWarning)
     
@@ -112,6 +126,18 @@ def bootstrap_ci(bootstrap_stats, alpha=0.05):
         - If `alpha` is not in (0, 1).
         - If `bootstrap_stats` is empty.
     
+    Examples
+    --------
+    >>> stats = np.arange(100)  # 0..99
+    >>> ci = bootstrap_ci(stats, alpha=0.1)
+    >>> 0 <= ci[0] <= 10
+    True
+    >>> 90 <= ci[1] <= 100
+    True
+    >>> isinstance(ci, tuple)
+    True
+    >>> len(ci)
+    2
     """
     if not (0 < alpha < 1):
         raise ValueError("alpha must be in (0, 1)")
@@ -149,6 +175,17 @@ def R_squared(X, y):
         - If `y` has zero variance.
     LinAlgError
         If `X^T X` is singular (features may be collinear).
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> X = np.array([[1, 1],
+    ...               [1, 2],
+    ...               [1, 3],
+    ...               [1, 4]])  # intercept + one feature
+    >>> y = np.array([2, 3, 4, 5])
+    >>> round(R_squared(X, y), 2)
+    1.0
     """
     X = np.asarray(X)
     y = np.asarray(y)

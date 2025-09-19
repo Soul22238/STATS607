@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from bootstrap import bootstrap_sample, bootstrap_ci, r_squared
+from bootstrap import bootstrap_sample, bootstrap_ci, R_squared
 
 class TestBootstrap:
     """Test suite for bootstrap functions"""
@@ -12,7 +12,7 @@ class TestBootstrap:
         y = 2 + 3 * np.arange(10) + np.random.normal(0, 1, size=10)  # Known relationship
         
         def compute_stat(X, y):
-            return r_squared(X, y)
+            return R_squared(X, y)
         
         # Original R-squared value
         original_r2 = compute_stat(X, y)
@@ -36,7 +36,7 @@ class TestBootstrap:
         y = np.array([1, 1, 1, 1, 1])  # Zero variance in y
         
         def compute_stat(X, y):
-            return r_squared(X, y)
+            return R_squared(X, y)
         
         # Zero variance in y
         with pytest.raises(ValueError, match="y has zero variance"):
@@ -57,7 +57,7 @@ class TestBootstrap:
     def test_bootstrap_sample_warning(self):
         """Test that warnings are issued appropriately."""
         def compute_stat(X, y):
-            return r_squared(X, y)
+            return R_squared(X, y)
         # Test warning about small sample size
         X_small = np.column_stack((np.ones(5), np.arange(5)))
         y_small = np.array([1, 2, 3, 4, 5])
@@ -67,8 +67,16 @@ class TestBootstrap:
         # Test warning about few bootstrap samples
         with pytest.warns(UserWarning, match="Number of bootstrap samples is low"):
             bootstrap_ci([1, 2, 3, 4, 5] * 10, np.mean, n_bootstrap=100)
-        
     
+    def test_bootstrap_ci_happy_path(self):
+        """Test basic functionality of bootstrap_ci"""
+        
+    def test_bootstrap_ci_edge_cases(self):
+        
+    def test_bootstrap_ci_errors(self):
+
+    def test_bootstrap_ci_wanings(self):
+
 
 
 def test_bootstrap_integration():
