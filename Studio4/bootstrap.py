@@ -79,7 +79,7 @@ def bootstrap_sample(X, y, compute_stat, n_bootstrap=1000):
     
     if X.size == 0 or y.size == 0:
         raise ValueError("X and y must not be empty")
-    elif X.shape[0] <= 3:
+    elif X.shape[0] <= 10:
         warnings.warn(f"X and y have a small sample size of {X.shape[0]}.", UserWarning)
     
     if np.any(np.isnan(X)) or np.any(np.isnan(y)):
@@ -102,7 +102,14 @@ def bootstrap_sample(X, y, compute_stat, n_bootstrap=1000):
     
     # Loop to calculate statistic
     for i in range(n_bootstrap):
-        idx = np.random.choice(n, size=n, replace=True)
+        while True:
+            idx = np.random.choice(n, size=n, replace=True)
+            try:
+                boost_stat[i] = compute_stat(X[idx, ], y[idx])
+                break  # success, exit while loop
+            except np.linalg.LinAlgError:
+                # retry with a new sample
+                continue
         boost_stat[i] = compute_stat(X[idx, ], y[idx])
     
     return boost_stat
