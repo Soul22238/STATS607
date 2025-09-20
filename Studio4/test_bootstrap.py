@@ -39,7 +39,7 @@ class TestBootstrap:
             return R_squared(X, y)
         
         # Zero variance in y
-        with pytest.raises(ValueError, match="y has zero variance"):
+        with pytest.raises(ValueError, match=r"y has zero variance"):
             bootstrap_sample(X, y, compute_stat, n_bootstrap=1000)
 
         # Array length mismatch
@@ -67,8 +67,8 @@ class TestBootstrap:
         # Test warning about few bootstrap samples
         X = np.column_stack((np.ones(10), np.arange(10)))  # Intercept + linear trend
         y = 2 + 3 * np.arange(10) + np.random.normal(0, 1, size=10)  # Known relationship
-        with pytest.warns(UserWarning, match="Using 100 bootstarp samples."):
-            bootstrap_sample(X, y, np.mean, n_bootstrap=100)
+        with pytest.warns(UserWarning, match="X and y have a small sample size"):
+            bootstrap_sample(X, y, compute_stat, n_bootstrap=100)
     
     def test_bootstrap_ci_happy_path(self):
         """Test basic functionality of bootstrap_ci."""
@@ -150,10 +150,115 @@ class TestBootstrap:
             R_squared(X_collinear, y)
 
 
+# def test_bootstrap_integration():
+#     """Test that bootstrap_sample and bootstrap_ci work together"""
+#     # This test should initially fail
+#     pass
 def test_bootstrap_integration():
     """Test that bootstrap_sample and bootstrap_ci work together"""
-    # This test should initially fail
-    pass
+    # Set random seed for reproducibility
+    np.random.seed(42)
+    
+    # Create synthetic data with known relationship
+    n = 50  # sample size
+    X = np.column_stack([
+        np.ones(n),  # intercept
+        np.linspace(0, 10, n)  # feature
+    ])
+    true_beta = np.array([1, 2])  # true coefficients
+    y = X @ true_beta + np.random.normal(0, 1, n)  # y = 1 + 2x + noise
+    
+    # Calculate original R-squared
+    original_r2 = R_squared(X, y)
+    
+    # Generate bootstrap distribution
+    n_bootstrap = 1000
+    bootstrap_stats = bootstrap_sample(
+        X, y,
+        compute_stat=R_squared,
+        n_bootstrap=n_bootstrap
+    )
+    
+    # Calculate 95% confidence interval
+    ci = bootstrap_ci(bootstrap_stats, alpha=0.05)
+    
+    # Assertions
+    assert len(bootstrap_stats) == n_bootstrap
+    assert isinstance(ci, tuple)
+    assert len(ci) == 2
+    assert ci[0] <= original_r2 <= ci[1]  # original stat should be in CI
+    assert 0 <= ci[0] <= ci[1] <= 1  # R-squared CI should be in [0,1]
+    assert len(np.unique(bootstrap_stats)) > n_bootstrap/10  # Check for variation
+    assert np.mean(bootstrap_stats) > 0.5  # Should have good fit
 
-# TODO: Add your unit tests here
+def test_bootstrap_null_distribution():
+    """
+    Test bootstrap R² distribution against theoretical Beta distribution under null hypothesis.
+    Under H0: beta_1 = ... = beta_p = 0, R² ~ Beta(p/2, (n-p-1)/2)
+    where p = number of predictors (excluding intercept).
+    """
+    import numpy as np
+    from scipy import stats
 
+    np.random.seed(42)
+    
+    # Setup parameters
+    n = 100   # sample size
+    p = 4     # number of predictors (excluding intercept)
+    n_bootstrap = 2000
+    
+    # Generate data under null hypothesis (independent X, y)
+    X = np.column_stack([
+        np.ones(n),                        # intercept
+        np.random.normal(0, 1, (n, p))     # predictors
+    ])
+    y = np.random.normal(0, 7, n)
+    
+    # Bootstrap distribution of R²
+    bootstrap_stats = bootstrap_sample(
+        X, y,
+        compute_stat=R_squared,
+        n_bootstrap=n_bootstrap
+    )
+    
+    # Theoretical Beta distribution parameters
+    alpha = p / 2
+    beta = (n - p - 1) / 2
+    theoretical_dist = stats.beta(alpha, beta)
+    
+    # Compare quantiles
+    quantiles = [0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99]
+    theoretical_quantiles = theoretical_dist.ppf(quantiles)
+    empirical_quantiles = np.percentile(bootstrap_stats, np.array(quantiles) * 100)
+    
+    np.testing.assert_array_almost_equal(
+        empirical_quantiles,
+        theoretical_quantiles,
+        decimal=1,
+        err_msg="Bootstrap quantiles differ significantly from theoretical Beta distribution"
+    )
+    
+    # Kolmogorov-Smirnov test
+    ks_stat, p_value = stats.kstest(bootstrap_stats, theoretical_dist.cdf)
+    assert p_value > 0.01, (
+        f"Bootstrap distribution differs significantly from theoretical "
+        f"Beta({alpha:.2f},{beta:.2f}) distribution (KS test p-value = {p_value:.4f})"
+    )
+    
+    # Mean and variance check
+    theoretical_mean = alpha / (alpha + beta)
+    theoretical_var = (alpha * beta) / ((alpha + beta)**2 * (alpha + beta + 1))
+    
+    np.testing.assert_almost_equal(
+        np.mean(bootstrap_stats),
+        theoretical_mean,
+        decimal=1,
+        err_msg="Bootstrap mean differs significantly from theoretical mean"
+    )
+    
+    np.testing.assert_almost_equal(
+        np.var(bootstrap_stats),
+        theoretical_var,
+        decimal=1,
+        err_msg="Bootstrap variance differs significantly from theoretical variance"
+    )
