@@ -1,5 +1,7 @@
 import pytest
 import numpy as np
+from scipy import stats
+from sklearn.linear_model import LinearRegression
 from bootstrap import bootstrap_sample, bootstrap_ci, R_squared
 
 class TestBootstrap:
@@ -155,7 +157,7 @@ class TestBootstrap:
 #     # This test should initially fail
 #     pass
 def test_bootstrap_integration():
-    """Test that bootstrap_sample and bootstrap_ci work together"""
+    """Test that bootstrap_sample, bootstrap_ci work, and R_square together"""
     # Set random seed for reproducibility
     np.random.seed(42)
     
@@ -197,8 +199,6 @@ def test_bootstrap_null_distribution():
     Under H0: beta_1 = ... = beta_p = 0, R² ~ Beta(p/2, (n-p-1)/2)
     where p = number of predictors (excluding intercept).
     """
-    import numpy as np
-    from scipy import stats
 
     np.random.seed(42)
     
@@ -212,7 +212,7 @@ def test_bootstrap_null_distribution():
         np.ones(n),                        # intercept
         np.random.normal(0, 1, (n, p))     # predictors
     ])
-    y = np.random.normal(0, 7, n)
+    y = np.random.normal(0, 1, n)
     
     # Bootstrap distribution of R²
     bootstrap_stats = bootstrap_sample(
@@ -237,7 +237,7 @@ def test_bootstrap_null_distribution():
         decimal=1,
         err_msg="Bootstrap quantiles differ significantly from theoretical Beta distribution"
     )
-    
+
     # Kolmogorov-Smirnov test
     ks_stat, p_value = stats.kstest(bootstrap_stats, theoretical_dist.cdf)
     assert p_value > 0.01, (
