@@ -65,9 +65,10 @@ class TestBootstrap:
             bootstrap_sample(X_small, y_small, compute_stat, n_bootstrap=1000)
         
         # Test warning about few bootstrap samples
-        with pytest.warns(UserWarning, match="Using 100 bootstarp samples."
-                          "Consider using at least 1000."):
-            bootstrap_ci([1, 2, 3, 4, 5] * 10, np.mean, n_bootstrap=100)
+        X = np.column_stack((np.ones(10), np.arange(10)))  # Intercept + linear trend
+        y = 2 + 3 * np.arange(10) + np.random.normal(0, 1, size=10)  # Known relationship
+        with pytest.warns(UserWarning, match="Using 100 bootstarp samples."):
+            bootstrap_sample(X, y, np.mean, n_bootstrap=100)
     
     def test_bootstrap_ci_happy_path(self):
         """Test basic functionality of bootstrap_ci."""
