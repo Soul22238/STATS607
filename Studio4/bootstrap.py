@@ -51,7 +51,7 @@ def bootstrap_sample(X, y, compute_stat, n_bootstrap=1000):
     --------
     >>> import numpy as np
     >>> np.random.seed(0)  # for reproducibility
-    >>> from mymodule import bootstrap_sample
+    >>> from bootstrap import bootstrap_sample
     >>> X = np.column_stack([np.ones(5), [1, 2, 3, 4, 5]])
     >>> y = np.array([1, 2, 3, 4, 5])
     >>> stats = bootstrap_sample(X, y, compute_stat=lambda X, y: np.mean(y), n_bootstrap=1000)
