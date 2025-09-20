@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-
 from scipy import stats
+from sklearn.linear_model import LinearRegression
 from bootstrap import bootstrap_sample, bootstrap_ci, R_squared
 
 class TestBootstrap:
@@ -157,7 +157,7 @@ class TestBootstrap:
 #     # This test should initially fail
 #     pass
 def test_bootstrap_integration():
-    """Test that bootstrap_sample and bootstrap_ci work together"""
+    """Test that bootstrap_sample, bootstrap_ci work, and R_square together"""
     # Set random seed for reproducibility
     np.random.seed(42)
     

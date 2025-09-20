@@ -40,11 +40,12 @@ def bootstrap_sample(X, y, compute_stat, n_bootstrap=1000):
         - If `X` and `y` have different lengths.
         - If `X.shape[0] <= 0`.
         - If `X` or `y` contains NaN values.
+        - if `y` has zero variance.
     
     Warns
     -----
     UserWarning
-        - If `X.shape[0] <= 3`, warns about small sample size.
+        - If `X.shape[0] <= 10`, warns about small sample size.
         - If `n_bootstrap < 1000`, warns about too few bootstrap samples.
     
     Examples
@@ -72,7 +73,7 @@ def bootstrap_sample(X, y, compute_stat, n_bootstrap=1000):
         raise ValueError("X must be 2D")
 
     if y.ndim != 1:
-        raise ValueError("y must be 2D")
+        raise ValueError("y must be 1D")
     
     if len(X) != len(y):
         raise ValueError(f"X and y must have same length: got {len(X)} and {len(y)}")
@@ -135,6 +136,11 @@ def bootstrap_ci(bootstrap_stats, alpha=0.05):
     ValueError
         - If `alpha` is not in (0, 1).
         - If `bootstrap_stats` is empty.
+    
+    Warns
+    -----
+    UserWarning
+        - If `len(bootstrap_stats) < 1000`, warns about too few bootstrap samples.
     
     Examples
     --------
