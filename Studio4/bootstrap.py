@@ -77,7 +77,7 @@ def bootstrap_sample(X, y, compute_stat, n_bootstrap=1000):
     if len(X) != len(y):
         raise ValueError(f"X and y must have same length: got {len(X)} and {len(y)}")
     
-    if X.size == 0:
+    if X.size == 0 or y.size == 0:
         raise ValueError("X and y must not be empty")
     elif X.shape[0] <= 3:
         warnings.warn(f"X and y have a small sample size of {X.shape[0]}.", UserWarning)
@@ -88,10 +88,13 @@ def bootstrap_sample(X, y, compute_stat, n_bootstrap=1000):
     if not isinstance(n_bootstrap, int):
         raise TypeError(f"Number of boostraping samples must be integer")
     
+    if np.var(y) <= 1e-10:
+        raise ValueError("y has zero variance")
+
     if n_bootstrap < 1000:
         warnings.warn(f"Using {n_bootstrap} bootstarp samples." 
                       "Consider using at least 1000.", UserWarning)
-    
+
     # Create container for the boostraping statistics
     boost_stat = np.zeros(n_bootstrap)
     
